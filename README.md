@@ -41,6 +41,14 @@ sudo apt install -y mosquitto mosquitto-clients
 sudo systemctl enable mosquitto.service
 ```
 
+#### Database
+
+- Install SQLite3 db
+
+```bash
+sudo apt install sqlite3
+```
+
 #### Python Environment
 
 - Go to the project root directory and create a Virtual environment to run this application as `switch_env`
