@@ -70,6 +70,12 @@ source switch_env/bin/activate
 pip3 install -r requirements.txt
 ```
 
+- To create a DB file, update data in `users.csv` and `topics.csv` in __db_csv__ and run the `db_init.py` file
+
+```bash
+python3 db_init.py
+```
+
 - Now run the server
 
 ```bash
