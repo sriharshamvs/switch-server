@@ -9,14 +9,24 @@ mqtt_route = Blueprint('mqtt_route', __name__)
 def find_topics_by_room(room):
     connection = sqlite3.connect(db_location)
     cursor = connection.cursor()
-    query = "SELECT * FROM topics WHERE room=?"
+    query = "SELECT room, device, status, icon FROM topics WHERE room=?"
     row = cursor.execute(query, (room,))
     if row:
-        keys = ['room', 'device', 'topic', 'status', 'icon']
+        keys = ['room', 'device', 'status', 'icon']
         deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
         connection.close()
         return deviceData
 
+def find_all_topics():
+    connection = sqlite3.connect(db_location)
+    cursor = connection.cursor()
+    query = "SELECT room, device, status, icon FROM topics"
+    row = cursor.execute(query, ())
+    if row:
+        keys = ['room', 'device', 'status', 'icon']
+        deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
+        connection.close()
+        return deviceData
 
 def find_topic_by_room_and_device(room, device):
     connection = sqlite3.connect(db_location)
@@ -48,9 +58,11 @@ def update_all(action, room):
 
 
 def publishData(requestData):
+      user = requestData['user']
       room = requestData['room']
       device = requestData['device']
       action = requestData['action']
+
       try:
           dbTopic = find_topic_by_room_and_device(room, device)
           if dbTopic:
@@ -61,7 +73,9 @@ def publishData(requestData):
                 mqttc.publish(dbTopic[2], "1")
                 print('Published : {}'.format(dbTopic))
             find_device_and_update(action, room, device)
-            deviceData = find_topics_by_room(room)
+            deviceData = find_all_topics() if user == 'admin' else find_topics_by_room(room)
+            if user == 'admin':
+              room = '0'
             data = {"room": room, "devices": deviceData}
             return {
                 "message": "Request Sucessful",

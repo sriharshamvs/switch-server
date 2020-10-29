@@ -16,14 +16,24 @@ def find_user_by_username(username):
     if row:
         return row
 
+def find_all_users():
+    connection = sqlite3.connect(db_location)
+    cursor = connection.cursor()
+    query = "SELECT username, room FROM users WHERE username != 'admin'"
+    rows = cursor.execute(query, ())
+    if rows:
+        keys = ['user', 'room']
+        users = [dict(zip(keys, rows)) for rows in cursor.fetchall()]
+        connection.close()
+        return users
 
 def find_topics_by_room(room):
     connection = sqlite3.connect(db_location)
     cursor = connection.cursor()
-    query = "SELECT * FROM topics WHERE room=?"
+    query = "SELECT room, device, status, icon FROM topics WHERE room=?"
     row = cursor.execute(query, (room,))
     if row:
-        keys = ['room', 'device', 'topic', 'status', 'icon']
+        keys = ['room', 'device', 'status', 'icon']
         deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
         connection.close()
         return deviceData
@@ -32,11 +42,11 @@ def find_topics_by_room(room):
 def find_all_topics():
     connection = sqlite3.connect(db_location)
     cursor = connection.cursor()
-    query = "SELECT * FROM topics"
-    row = cursor.execute(query, ())
-    if row:
-        keys = ['room', 'device', 'topic', 'status', 'icon']
-        deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
+    query = "SELECT room, device, status, icon FROM topics"
+    rows = cursor.execute(query, ())
+    if rows:
+        keys = ['room', 'device', 'status', 'icon']
+        deviceData = [dict(zip(keys, rows)) for rows in cursor.fetchall()]
         connection.close()
         return deviceData
 
@@ -59,7 +69,9 @@ def getDevices():
         if dbUser[1] == password:
             if dbUser[0] == 'admin':
                 deviceData = find_all_topics()
-                data = {"room": dbUser[2], "devices": deviceData}
+                users = find_all_users()
+                print("Users: ", users)
+                data = {"room": dbUser[2], "devices": deviceData, "users": users}
                 pass
             else:
                 deviceData = find_topics_by_room(dbUser[2])
