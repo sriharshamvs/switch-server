@@ -57,6 +57,13 @@ def main():
     }), 200
 
 
+@app.route("/api/ping")
+def ping():
+    return jsonify({
+        "messages": "Sever Up"
+    }), 200
+
+
 @app.route("/robots.txt")
 def robots_dot_txt():
     return "User-agent: *\nDisallow: /"
