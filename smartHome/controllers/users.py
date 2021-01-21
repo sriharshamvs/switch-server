@@ -23,8 +23,8 @@ def getDevices():
         if user_details:
             if utils.check_password(user_details.password_hash, requestData['password']):
                 if user_details.username == 'admin':
-                    deviceData = topics_schema.dump(Topics.find_all_topics())
-                    users = user_schema.dump(User.find_all_users())
+                    deviceData = topics_schema.dump(Topics.find_all())
+                    users = user_schema.dump(User.find_all())
                     data = {"room": user_details.room, "devices": deviceData, "users": users}
                 else:
                     deviceData = topics_schema.dump(Topics.find_by_room(user_details.room))

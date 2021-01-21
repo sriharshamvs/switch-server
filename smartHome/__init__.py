@@ -9,51 +9,42 @@ import os
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# db_location = BASE_DIR + '/smartHome.db'
+db_location = BASE_DIR + '/smartHome_2.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + BASE_DIR + '/smartHome_2.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
 
-# mqttc = mqtt.Client()
-# mqttc.connect("localhost", 1883, 60)
-# mqttc.loop_start()
+mqttc = mqtt.Client()
+mqttc.connect("localhost", 1883, 60)
+mqttc.loop_start()
 
 
 # Blueprints
-# from smartHome.controllers.mqttClient import mqtt_route
+from smartHome.controllers.mqttClient import mqtt_route
 from smartHome.controllers.users import user_route
+from smartHome.models import Topics, TopicsSchema
 
 app.register_blueprint(user_route)
-# app.register_blueprint(mqtt_route)
+app.register_blueprint(mqtt_route)
 
 
-# def find_all_topics():
-#     connection = sqlite3.connect(db_location)
-#     cursor = connection.cursor()
-#     query = "SELECT * FROM topics"
-#     row = cursor.execute(query)
-#     if row:
-#         keys = ['room', 'device', 'topic', 'status', 'icon']
-#         devices = [dict(zip(keys, row)) for row in cursor.fetchall()]
-#         connection.close()
-#         return devices
+def action_on_reboot():
+    devices = Topics.find_all()
+    for device in devices:
+        if device.status == "ON":
+            action = "0"
+        elif device.status == "OFF":
+            action = "1"
+        mqttc.publish(device.topic, action)
+        print('Published: room: {} topic: {} status: {}'.format(device.room, device.topic, device.status))
 
 
-# def action_on_reboot():
-#     devices = find_all_topics()
-#     for device in devices:
-#         if device['status'] == "ON":
-#             action = "0"
-#         elif device['status'] == "OFF":
-#             action = "1"
-#         mqttc.publish(device['topic'], action)
-#         print('Published {}'.format(device))
-
-
-# action_on_reboot()
+action_on_reboot()
 
 
 @app.route("/")

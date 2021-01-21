@@ -24,7 +24,7 @@ class User(db.Model):
         return q.first()
     
     @staticmethod
-    def find_all_users():
+    def find_all():
         q = User.query.filter(User.username != 'admin').all()
         return q
 
@@ -52,9 +52,28 @@ class Topics(db.Model):
         return q.all()
     
     @staticmethod
-    def find_all_topics():
+    def find_all():
         q = Topics.query.all()
         return q
+
+    @staticmethod
+    def find_by_room_and_device(room=None, device=None, **kw):
+        q = Topics.query.filter_by(**kw)
+        if room and device:
+            q = q.filter(Topics.room == room, Topics.device == device)
+        return q.all()
+
+    @staticmethod
+    def find_device_and_update(action=None, topic=None, **kw):
+        if topic and action:
+            q = Topics.query.filter_by(topic=topic).update(dict(status=action))
+            db.session.commit()
+    
+    @staticmethod
+    def update_all(status=None, room=None, **kw):
+        if room and status:
+            q = Topics.query.filter_by(room=room).update(dict(status=status))
+            db.session.commit()
 
 class TopicsSchema(ma.Schema):
     class Meta:

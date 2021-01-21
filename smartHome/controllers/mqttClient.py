@@ -1,81 +1,34 @@
-from smartHome import mqttc, db_location
+from smartHome import mqttc
+from smartHome.models import Topics, TopicsSchema
 from flask import Blueprint, jsonify, request
-import sqlite3
 
+topic_schema = TopicsSchema(many=True)
 
 mqtt_route = Blueprint('mqtt_route', __name__)
 
 
-def find_topics_by_room(room):
-    connection = sqlite3.connect(db_location)
-    cursor = connection.cursor()
-    query = "SELECT room, device, status, icon FROM topics WHERE room=?"
-    row = cursor.execute(query, (room,))
-    if row:
-        keys = ['room', 'device', 'status', 'icon']
-        deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
-        connection.close()
-        return deviceData
-
-def find_all_topics():
-    connection = sqlite3.connect(db_location)
-    cursor = connection.cursor()
-    query = "SELECT room, device, status, icon FROM topics"
-    row = cursor.execute(query, ())
-    if row:
-        keys = ['room', 'device', 'status', 'icon']
-        deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
-        connection.close()
-        return deviceData
-
-def find_topic_by_room_and_device(room, device):
-    connection = sqlite3.connect(db_location)
-    cursor = connection.cursor()
-    query = "SELECT * FROM topics WHERE room=? AND device=?"
-    result = cursor.execute(query, (room, device))
-    row = result.fetchone()
-    connection.close()
-    if row:
-        return row
-
-
-def find_device_and_update(action, room, device):
-    connection = sqlite3.connect(db_location)
-    cursor = connection.cursor()
-    query = "UPDATE topics SET status=? WHERE room=? AND device=?"
-    cursor.execute(query, (action, room, device))
-    connection.commit()
-    connection.close()
-
-
-def update_all(action, room):
-    connection = sqlite3.connect(db_location)
-    cursor = connection.cursor()
-    query = "UPDATE topics SET status=? WHERE room=?"
-    cursor.execute(query, (action, room))
-    connection.commit()
-    connection.close()
-
-
 def publishData(requestData):
-      user = requestData['user']
+      username = requestData['username']
       room = requestData['room']
       device = requestData['device']
       action = requestData['action']
 
       try:
-          dbTopic = find_topic_by_room_and_device(room, device)
+          dbTopic = Topics.find_by_room_and_device(room, device)
           if dbTopic:
             if action == "ON":
-                mqttc.publish(dbTopic[2], "0")
-                print('Published : {}'.format(dbTopic))
+                mqttc.publish(dbTopic[0].topic, "0")
+                print('Published : {}'.format(dbTopic[0].topic))
             if action == "OFF":
-                mqttc.publish(dbTopic[2], "1")
-                print('Published : {}'.format(dbTopic))
-            find_device_and_update(action, room, device)
-            deviceData = find_all_topics() if user == 'admin' else find_topics_by_room(room)
-            if user == 'admin':
-              room = '0'
+                mqttc.publish(dbTopic[0].topic, "1")
+                print('Published : {}'.format(dbTopic[0].topic))
+            Topics.find_device_and_update(action, dbTopic[0].topic)
+            if username == "admin":
+                room = '0'
+                deviceData = topic_schema.dump(Topics.find_all())
+            else:
+                deviceData = topic_schema.dump(Topics.find_by_room(room))
+              
             data = {"room": room, "devices": deviceData}
             return {
                 "message": "Request Sucessful",
@@ -96,12 +49,17 @@ def statusRest(requestData):
         action = "0"
       elif status == "OFF":
         action = "1"
-      devices = find_topics_by_room(room)
+      devices = Topics.find_by_room(room)
       for device in devices:
-        mqttc.publish(device['topic'], action)
-      update_all(status, room)
+        mqttc.publish(device.topic, action)
+      Topics.update_all(status, room)
+      deviceData = topic_schema.dump(Topics.find_by_room(room))
+      data = {"room": room, "deviceData" : deviceData}
+      return {
+          "message": "Request Sucessful",
+          "data": data 
+        }, 200
       print("Room Reset")
-      return { "message": "Request Sucessful" }, 200
     except Exception as e:
         print("Oops!", e.__class__, "occurred.")
         return {"message": "Server Error"}, 500
