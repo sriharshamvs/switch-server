@@ -1,6 +1,7 @@
 from smartHome import mqttc
 from smartHome.models import Topics, TopicsSchema
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 
 topic_schema = TopicsSchema(many=True)
 
@@ -66,6 +67,7 @@ def statusRest(requestData):
 
 
 @mqtt_route.route("/api/dashboard", methods=['POST'])
+@jwt_required
 def dashboard():
    requestData = request.get_json()
    if requestData:
@@ -78,6 +80,7 @@ def dashboard():
 
 
 @mqtt_route.route("/api/dashboard/reset", methods=['POST'])
+@jwt_required
 def resetAll():
    requestData = request.get_json()
    if requestData:

@@ -3,8 +3,13 @@ from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 import paho.mqtt.client as mqtt
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    jwt_refresh_token_required, get_jwt_identity
+)
 import sqlite3
 import os
+import datetime
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -13,11 +18,15 @@ db_location = BASE_DIR + '/smartHome_2.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + BASE_DIR + '/smartHome_2.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = 'harshamvs'  # Change this!
 
+expires = datetime.timedelta(days=7)
+
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = expires
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-
+jwt = JWTManager(app)
 
 mqttc = mqtt.Client()
 mqttc.connect("localhost", 1883, 60)
@@ -58,6 +67,17 @@ def main():
 def ping():
     return jsonify({
         "messages": "Sever Up"
+    }), 200
+
+@app.route('/api/refresh', methods=['POST'])
+@jwt_refresh_token_required
+def refresh():
+    current_user = get_jwt_identity()
+    token = {
+        'access_token': create_access_token(identity=current_user)
+    }
+    return jsonify({
+        "token": token
     }), 200
 
 
