@@ -98,7 +98,39 @@ deactivate
 gunicorn --bind 0.0.0.0:5000 wsgi:app
 ```
 
-Now create a service file to run this application on restart
+Now create a service file `switch.service` to run this application on restart
+
+```bash
+[Unit]
+Description=Gunicorn instance to serve Project Switch
+After=network.target
+
+[Service]
+User=pi
+Group=www-data
+WorkingDirectory=/home/pi/project-switch/switch-server
+Environment="PATH=/home/pi/project-switch/switch-server/venv/bin"
+ExecStart=/home/pi/project-switch/switch-server/venv/bin/gunicorn --workers 3 --bind unix:projectswitch.sock -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+```
+Now we need to reload the daemon.
+
+```bash
+sudo systemctl daemon-reload
+```
+
+Enable service so that it doesn’t get disabled if the server restarts.
+
+```bash
+sudo systemctl enable switch.service
+```
+Now start the service.
+
+```bash
+sudo systemctl start switch.service
+```
 
 ## Contributing
 
