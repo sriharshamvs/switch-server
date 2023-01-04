@@ -114,8 +114,8 @@ After=network.target
 User=pi
 Group=www-data
 WorkingDirectory=/home/pi/project-switch/switch-server # Update Your PATH
-Environment="PATH=/home/pi/project-switch/switch-server/venv/bin" # Update Your PATH
-ExecStart=/home/pi/project-switch/switch-server/venv/bin/gunicorn --workers 3 --bind unix:projectswitch.sock -m 007 wsgi:app # Update Your PATH
+Environment="PATH=/home/pi/project-switch/switch-server/switch_env/bin" # Update Your PATH
+ExecStart=/home/pi/project-switch/switch-server/switch_env/bin/gunicorn --workers 3 --bind unix:projectswitch.sock -m 007 wsgi:app # Update Your PATH
 
 [Install]
 WantedBy=multi-user.target
