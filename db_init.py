@@ -6,13 +6,13 @@ def create_topics():
     print("Creating table: Topics")
     con = sqlite3.connect("smartHome.db")
     cur = con.cursor()
-    cur.execute("CREATE TABLE topics (room, device, topic, status, icon);")
+    cur.execute("CREATE TABLE topics (room, device, topic, status, icon, location);")
 
     with open('db_csv/topics.csv','r') as fin:
         dr = csv.DictReader(fin)
-        to_db = [(i['room'], i['device'], i['topic'], i['status'], i['icon']) for i in dr]
+        to_db = [(i['room'], i['device'], i['topic'], i['status'], i['icon'], i['location']) for i in dr]
 
-    cur.executemany("INSERT INTO topics (room, device, topic, status, icon) VALUES (?, ?, ?, ?, ?);", to_db)
+    cur.executemany("INSERT INTO topics (room, device, topic, status, icon, location) VALUES (?, ?, ?, ?, ?, ?);", to_db)
     con.commit()
     con.close()
 

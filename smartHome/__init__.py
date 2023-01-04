@@ -30,7 +30,7 @@ def find_all_topics():
     query = "SELECT * FROM topics"
     row = cursor.execute(query)
     if row:
-        keys = ['room', 'device', 'topic', 'status', 'icon']
+        keys = ['room', 'device', 'topic', 'status', 'icon', 'location']
         devices = [dict(zip(keys, row)) for row in cursor.fetchall()]
         connection.close()
         return devices

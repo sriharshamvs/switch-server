@@ -9,10 +9,10 @@ mqtt_route = Blueprint('mqtt_route', __name__)
 def find_topics_by_room(room):
     connection = sqlite3.connect(db_location)
     cursor = connection.cursor()
-    query = "SELECT room, device, status, icon FROM topics WHERE room=?"
+    query = "SELECT room, device, status, icon, location FROM topics WHERE room=?"
     row = cursor.execute(query, (room,))
     if row:
-        keys = ['room', 'device', 'status', 'icon']
+        keys = ['room', 'device', 'status', 'icon', 'location']
         deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
         connection.close()
         return deviceData
@@ -20,10 +20,10 @@ def find_topics_by_room(room):
 def find_all_topics():
     connection = sqlite3.connect(db_location)
     cursor = connection.cursor()
-    query = "SELECT room, device, status, icon FROM topics"
+    query = "SELECT room, device, status, icon, location FROM topics"
     row = cursor.execute(query, ())
     if row:
-        keys = ['room', 'device', 'status', 'icon']
+        keys = ['room', 'device', 'status', 'icon', 'location']
         deviceData = [dict(zip(keys, row)) for row in cursor.fetchall()]
         connection.close()
         return deviceData
